@@ -1,0 +1,55 @@
+version: "3"
+services:
+  bitcoind3:
+    image: nicolasdorier/docker-bitcoin:0.16.3
+    container_name: bitcoind3
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        regtest=1
+        whitelist=0.0.0.0/0
+        server=1
+        rpcuser=rpcuser
+        rpcpassword=rpcpass
+        addnode=bitcoind2
+        addnode=bitcoind1
+    expose:
+      - "18332"
+    ports:
+      - "0.0.0.0:18335:18333"
+    volumes:
+      - "bitcoin_datadir:/data"
+    networks:
+      - clightning_network
+
+  clightning_bitcoin3:
+    image: elementsproject/lightningd
+    container_name: lightningd3
+    command:
+      - --bitcoin-rpcconnect=bitcoind3
+      - --bitcoin-rpcuser=rpcuser
+      - --bitcoin-rpcpassword=rpcpass
+      - --network=regtest
+      - --plugin-dir=/usr/libexec/c-lightning/plugins
+      - --alias=myawesomenode3
+      - --log-level=debug
+    environment:
+      EXPOSE_TCP: "true"
+    expose:
+      - "9735"
+    ports:
+      - "0.0.0.0:9737:9735"
+    volumes:
+      - "clightning_bitcoin_datadir:/root/.lightning"
+      - "bitcoin_datadir:/etc/bitcoin"
+    links:
+      - bitcoind3
+    networks:
+      - clightning_network
+
+volumes:
+  bitcoin_datadir:
+  clightning_bitcoin_datadir:
+
+
+networks:
+  clightning_network:
