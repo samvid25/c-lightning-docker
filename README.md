@@ -48,6 +48,7 @@ alias lc='lightning-cli'
 
 lightningd1$ source /home/.bashrc
 ```
+Repeat the same for all containers.
 
 But using bitcoin-cli runs into a `rpcuser` error where it says credentials are not found. We will have to manually edit the `bitcoin.conf` file present at `/root/.bitcoin/`:
 ```bash
@@ -66,23 +67,91 @@ I believe this can also be done via the docker-compose file without having to ma
 
 The following sections assume you run the commands in their appropriate terminals (bitcoin-cli in the bitcoind terminals and the lightning-cli in the lightningd terminals) for the required nodes.
 
+Generate a few blocks on one of the nodes and see if the other nodes detect the blocks. If so, then the containers have been set up correctly.
+```bash
+bitcoind1$ bc generate 5
+```
+
+## Creating connections
+
+Obtain the ID of all the lightning nodes using:
+```bash
+lightningd1$ lc getinfo | grep id
+
+lightningd2$ lc getinfo | grep id
+
+lightningd3$ lc getinfo | grep id
+```
+
+Then connect the nodes to each other:
+```bash
+lightningd1$ lc connect <id2>@lightningd2
+lightningd1$ lc connect <id3>@lightningd3
+
+lightningd2$ lc connect <id3>@lightningd3
+```
+
+Now, we need a payment address to fund the node. Run the following on all the nodes and note the generated address for each node:
+```bash
+lightningd1$ lc newaddr
+
+lightningd2$ lc newaddr
+
+lightningd3$ lc newaddr
+```
+
+Now, we need to fund these nodes. Generate a few blocks so that some bitcoin is created. And then send funds (as required) to the addresses:
+```bash
+bitcoind1$ bc generate 200
+bitcoind1$ bc sendtoaddress <address1> 200
+bitcoind1$ bc sendtoaddress <address2> 200
+bitcoind1$ bc sendtoaddress <address3> 200
+bitcoind1$ bc generate 10
+```
+A few blocks are generated at the end to confirm the above transactions.
+
+Use the following command to check if funds have been received or not.
+```bash
+lightningd1$ lc listfunds
+
+lightningd2$ lc listfunds
+
+lightningd3$ lc listfunds
+```
+
 ## Opening channels
 
-Once the nodes have enough funds to open a channel, a channel can be opened with:
+Once the nodes have enough funds to open a channel, channels can be opened with:
 ```bash
-lc fundchannel <id> 150000
-```
-This opens a channel with the node specified by \<id\>. But the the funding transaction for this channel is still unconfirmed. Hence, a few blocks have to be generated to confirm the funding transaction and change the `state` of the channel to `CHANNELD_NORMAL` and make its visibility public.
-```bash
-bc generate 10
-```
-Repeat the above to create channels as required.
+lightningd1$ lc fundchannel <id2> 150000
 
-All the known channels in the network can be listed using:
+lightningd2$ lc fundchannel <id3> 150000
+
+lightningd3$ lc fundchannel <id1> 150000
+```
+But the the funding transaction for this channel is still unconfirmed. Hence, a few blocks have to be generated to confirm the funding transaction and change the `state` of the channel to `CHANNELD_NORMAL` and make its visibility public.
 ```bash
-lc listchannels
+bitcoind1$ bc generate 10
+```
+
+All the known (active) channels in the network can be listed using:
+```bash
+lightningd1$ lc listchannels
 ```
 In a larger network, the existance of a path to a node identified by <id> can be checked using:
 ```bash
 lc getroute <id> <msatoshi> <riskfactor>
 ```
+
+## Optional: Changing lightningd configuration
+
+Modify (or Add if it doesn't exist) the config file present at `/root/.lightning/` with the required parameters and restart lightningd:
+```bash
+lightningd1$ lc stop
+```
+```bash
+docker start lightningd1
+docker exec -i -t lightningd1 bash
+```
+
+_in progress_
