@@ -17,7 +17,7 @@ All the containers are connected via a `clightning_network` docker network.
 
 Note that there may be a better way to do this, but I am new to docker and this was one way I found to go about this. If there is a more optimal way, feel free to raise a pull request.
 
-## Instructions to build the images and run the containers
+## Running the containers
 Clone the repository onto your PC:
 ```bash
 git clone https://github.com/aaaaa
@@ -64,4 +64,25 @@ To ensure that all the nodes have a copy of the same blockchain, establish conne
 
 I believe this can also be done via the docker-compose file without having to manually doing it after container deployment. Will update the docker-compose files with the same soon.
 
-_in progress_
+The following sections assume you run the commands in their appropriate terminals (bitcoin-cli in the bitcoind terminals and the lightning-cli in the lightningd terminals) for the required nodes.
+
+## Opening channels
+
+Once the nodes have enough funds to open a channel, a channel can be opened with:
+```bash
+lc fundchannel <id> 150000
+```
+This opens a channel with the node specified by \<id\>. But the the funding transaction for this channel is still unconfirmed. Hence, a few blocks have to be generated to confirm the funding transaction and change the `state` of the channel to `CHANNELD_NORMAL` and make its visibility public.
+```bash
+bc generate 10
+```
+Repeat the above to create channels as required.
+
+All the known channels in the network can be listed using:
+```bash
+lc listchannels
+```
+In a larger network, the existance of a path to a node identified by <id> can be checked using:
+```bash
+lc getroute <id> <msatoshi> <riskfactor>
+```
