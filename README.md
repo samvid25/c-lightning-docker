@@ -20,7 +20,7 @@ Note that there may be a better way to do this, but I am new to docker and this 
 ## Running the containers
 Clone the repository onto your PC:
 ```bash
-git clone https://github.com/aaaaa
+git clone https://github.com/samvid25/c-lightning-docker.git
 ```
 
 Create the `lightningd` and `bitcoind` containers. Run this for all the docker-compose files in different terminal windows/tabs.
