@@ -6,21 +6,24 @@ The docker-compose images and the instructions in this repository are to setup a
 
 There is one docker-compose file for each node in our Lightning Network. Each docker-compose file has two services each, one that runs `bitcoind` and another that runs `lightningd`. We will need an instance of both for each node. We can connect all the c-lightning daemons to the same `bitcoind` instance, but for the sake of completeness we will set up an instance of `bitcoind` for each node.
 
-The bitcoind containers will be named `bitcoind1`, `bitcoind2` and so on, and the corresponding lightningd containers `lightningd1`, `lightningd2` and so on. We will be opening multiple terminal windows to interact with the daemons via CLI. A single terminal can also be used but I find it convenient to have terminals open to each container. I believe using a terminal multiplexer to handle multiple terminals is possible, but I am not an expert at it and is left to you to try :)
+The bitcoind containers will be named `bitcoind1`, `bitcoind2` and so on, and the corresponding lightningd containers `lightningd1`, `lightningd2` and so on. We will be opening multiple terminal windows to interact with the daemons via CLI. A single shell instance can also be used but I find it convenient to have separate shells open to each container.
 
 We will be setting up a topology as follows:
 ![topology](images/topology.png "Network Topology")
 
 You can create more nodes by duplicating the docker-compose files and set up a topology of your choice.
 
-All the containers are connected via a `clightning_network` docker network.
+All the containers are connected via a `LN_testing` docker network. We first create the docker network:
+```bash
+docker network create 'LN_testing'
+```
 
 Note that there may be a better way to do this, but I am new to docker and this was one way I found to go about this. If there is a more optimal way, feel free to raise a pull request.
 
 ## Running the containers
 Clone the repository onto your PC:
 ```bash
-git clone https://github.com/aaaaa
+git clone https://github.com/samvid25/c-lightning-docker.git
 ```
 
 Create the `lightningd` and `bitcoind` containers. Run this for all the docker-compose files in different terminal windows/tabs.
@@ -35,7 +38,7 @@ docker exec -i -t bitcoind1 bash
 ```bash
 docker exec -i -t lightnind1 bash
 ```
-We will be using `bitcoin-cli` to interact with `bitcoind` and `lightning-cli` to interact with `lightningd`. Aliases can be used to make your life easier:
+We will be using `bitcoin-cli` to interact with `bitcoind` and `lightning-cli` to interact with `lightningd`. Aliases can be used to make your life easier as you will be using these commands a lot:
 ```bash
 bitcoind1$ cat >> /home/.bashrc
 alias bc='bitcoin-cli'
@@ -110,7 +113,7 @@ bitcoind1$ bc generate 10
 ```
 A few blocks are generated at the end to confirm the above transactions.
 
-Use the following command to check if funds have been received or not.
+Use the following command to check if funds have been received or not. Note that it may take time for the funds to be appear due to block synchronization delays.
 ```bash
 lightningd1$ lc listfunds
 

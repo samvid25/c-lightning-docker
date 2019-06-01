@@ -19,7 +19,7 @@ services:
     volumes:
       - "bitcoin_datadir:/data"
     networks:
-      - clightning_network
+      - LN_testing
 
   clightning_bitcoin3:
     image: elementsproject/lightningd
@@ -40,11 +40,11 @@ services:
       - "0.0.0.0:9737:9735"
     volumes:
       - "clightning_bitcoin_datadir:/root/.lightning"
-      - "bitcoin_datadir:/etc/bitcoin"
+      - "bitcoin_datadir:/root/.bitcoin"
     links:
       - bitcoind3
     networks:
-      - clightning_network
+      - LN_testing
 
 volumes:
   bitcoin_datadir:
@@ -52,4 +52,6 @@ volumes:
 
 
 networks:
-  clightning_network:
+  LN_testing:
+    external:
+      name: LN_testing
